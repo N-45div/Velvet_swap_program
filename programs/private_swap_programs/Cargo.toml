@@ -1,0 +1,31 @@
+[package]
+name = "private_swap_programs"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "private_swap_programs"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+anchor-debug = []
+custom-heap = []
+custom-panic = []
+
+
+[dependencies]
+anchor-lang = "0.31.1"
+inco-lightning = { version = "0.1.4", features = ["cpi"] }
+inco-token = { path = "../inco-token", features = ["cpi"] }
+ephemeral-rollups-sdk = { version = "0.8.0", features = ["anchor", "access-control"] }
+
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
