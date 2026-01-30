@@ -4,6 +4,20 @@
 
 ---
 
+## Privacy Layer Status (Verified)
+
+Verified via `scripts/verify-privacy-layers.ts`:
+
+| Layer | Status | Test Result |
+|-------|--------|-------------|
+| **Light Protocol (ZK)** | ✅ Working | Pool at `1QJcNYRBuDKQnWQofUQNwFg9MRoqgoLAUhW5js2ApS2`, leafIndex 290427 |
+| **Inco Lightning (FHE)** | ✅ Working | Program deployed, pool data: 203 bytes FHE ciphertexts |
+| **MagicBlock TEE** | ❌ Incompatible | `Cloner error: Failed to clone program SySTEM1eSU2p4BGQfQpimFEWWSC1XDFeun3Nqzz3rT7` |
+
+> **TEE Limitation:** MagicBlock PER creates an isolated ephemeral environment that cannot clone Light Protocol programs from devnet mainstate. Swaps execute on devnet directly with FHE + ZK privacy.
+
+---
+
 ## System Overview
 
 ```mermaid
@@ -14,9 +28,9 @@ graph TB
     end
 
     subgraph "Privacy Layer"
-        INCO["Inco Lightning<br/>FHE Operations"]
-        LIGHT["Light Protocol V2<br/>ZK Compressed Accounts"]
-        PER["MagicBlock PER<br/>TEE Execution"]
+        INCO["Inco Lightning<br/>FHE Operations ✅"]
+        LIGHT["Light Protocol V2<br/>ZK Compressed Accounts ✅"]
+        PER["MagicBlock PER<br/>TEE ❌ Incompatible"]
     end
 
     subgraph "Solana Runtime"
@@ -25,17 +39,17 @@ graph TB
     end
 
     UI --> SDK
-    SDK --> PER
-    PER --> PROGRAM
+    SDK --> |"Helius RPC"| PROGRAM
     PROGRAM --> INCO
     PROGRAM --> LIGHT
     PROGRAM --> POOL
+    PER -.-> |"Cannot clone<br/>Light programs"| PROGRAM
 
     style UI fill:#7C3AED,color:#fff
     style SDK fill:#7C3AED,color:#fff
     style INCO fill:#22C55E,color:#fff
     style LIGHT fill:#3B82F6,color:#fff
-    style PER fill:#F59E0B,color:#fff
+    style PER fill:#6B7280,color:#fff
     style PROGRAM fill:#9945FF,color:#fff
     style POOL fill:#1e1e2e,color:#fff,stroke:#9945FF
 ```

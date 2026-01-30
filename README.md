@@ -1,15 +1,18 @@
 # VelvetSwap — Confidential AMM for Solana
 
-<p align="center">
-  <strong>The first fully confidential AMM on Solana</strong><br/>
-  Swap amounts, pool reserves, and fee accounting are <em>all encrypted</em>.
-</p>
+[![Solana](https://img.shields.io/badge/Solana-Devnet-9945FF)](https://solana.com)
+[![Light Protocol](https://img.shields.io/badge/Light%20Protocol-V2-3B82F6)](https://lightprotocol.com)
+[![Inco Network](https://img.shields.io/badge/Inco-FHE-22C55E)](https://inco.network)
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Solana-Devnet-9945FF?style=for-the-badge&logo=solana" />
-  <img src="https://img.shields.io/badge/Privacy-FHE%20+%20TEE-7C3AED?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Status-Hackathon%20MVP-22C55E?style=for-the-badge" />
-</p>
+## Privacy Layer Status (Verified)
+
+| Layer | Status | Details |
+|-------|--------|--------|
+| **Light Protocol (ZK)** | ✅ Working | Pool stored as compressed account at `1QJcNYRBuDKQnWQofUQNwFg9MRoqgoLAUhW5js2ApS2` |
+| **Inco Lightning (FHE)** | ✅ Working | Pool data: 203 bytes of FHE ciphertexts (Euint128 reserves) |
+| **MagicBlock TEE** | ⚠️ Incompatible | TEE cannot clone Light Protocol programs from mainstate |
+
+> **Note:** MagicBlock PER permissions are configured but TEE execution is incompatible with Light Protocol. Swaps execute on devnet with FHE + ZK privacy.
 
 ---
 
