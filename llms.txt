@@ -1,0 +1,101 @@
+# Light Protocol
+
+## Docs
+
+- [null](https://www.zkcompression.com/api-reference/json-rpc-methods/getcompressedaccount.md): Retrieve compressed account information by address or hash. RPC method guide with use cases, tips and examples.
+- [null](https://www.zkcompression.com/api-reference/json-rpc-methods/getcompressedaccountsbyowner.md): Retrieve all compressed accounts owned by a specific address. RPC method guide with use cases, tips and examples.
+- [null](https://www.zkcompression.com/api-reference/json-rpc-methods/getcompressedbalance.md): Retrieve the lamport balance for a specific compressed account by address or hash. Overview with RPC method guide.
+- [null](https://www.zkcompression.com/api-reference/json-rpc-methods/getcompressedbalancebyowner.md): Query the total compressed token balance for a specific account owner. Overview with RPC method guide.
+- [null](https://www.zkcompression.com/api-reference/json-rpc-methods/getcompressedminttokenholders.md): Retrieve owner balances for a given mint in descending order. Overview with RPC method guide.
+- [null](https://www.zkcompression.com/api-reference/json-rpc-methods/getcompressedtokenaccountbalance.md): Retrieve the balance for a given token account by address or hash. Overview with RPC method guide
+- [null](https://www.zkcompression.com/api-reference/json-rpc-methods/getcompressedtokenaccountbydelegate.md): Retrieve compressed token accounts that are partially or fully delegated to a given delegate. Overview with RPC method guide.
+- [null](https://www.zkcompression.com/api-reference/json-rpc-methods/getcompressedtokenaccountsbyowner.md): Retrieve compressed token accounts owned by a specific address. RPC method guide with use cases, tips and examples.
+- [null](https://www.zkcompression.com/api-reference/json-rpc-methods/getcompressedtokenbalancesbyowner.md): Retrieves all token balances for compressed accounts owned by an address. Overview with RPC method guide.
+- [null](https://www.zkcompression.com/api-reference/json-rpc-methods/getcompressionsignaturesforaccount.md): Retrieve the signatures of the transactions that closed or opened a compressed account with the given hash. Overview with RPC method guide.
+- [null](https://www.zkcompression.com/api-reference/json-rpc-methods/getcompressionsignaturesforaddress.md): Retrieve the signatures of the transactions that closed or opened a compressed account with the given address. Overview with RPC method guide.
+- [null](https://www.zkcompression.com/api-reference/json-rpc-methods/getcompressionsignaturesforowner.md): Retrieve the signatures of the transactions that have modified an owner's compressed accounts. Overview with RPC method guide.
+- [null](https://www.zkcompression.com/api-reference/json-rpc-methods/getcompressionsignaturesfortokenowner.md): Retrieve the signatures of the transactions that have modified an owner's compressed token accounts. Overview with RPC method guide.
+- [null](https://www.zkcompression.com/api-reference/json-rpc-methods/getindexerhealth.md): Retrieve an error if the indexer is stale by more than a configurable number of blocks. Otherwise, it returns ok. Overview with RPC method guide.
+- [null](https://www.zkcompression.com/api-reference/json-rpc-methods/getindexerslot.md): Retrieve the slot of the last block indexed by the indexer. Overview with RPC method guide.
+- [null](https://www.zkcompression.com/api-reference/json-rpc-methods/getlatestcompressionsignatures.md): Retrieve the signatures of the latest transactions that used the compression program. This is a paginated endpoint. Overview with RPC method guide.
+- [null](https://www.zkcompression.com/api-reference/json-rpc-methods/getlatestnonvotingsignatures.md): Retrieve the signatures of the latest transactions that are not voting transactions. Overview with RPC method guide.
+- [null](https://www.zkcompression.com/api-reference/json-rpc-methods/getmultiplecompressedaccounts.md): Retrieve multiple compressed accounts with the given addresses or hashes. Overview with RPC method guide.
+- [null](https://www.zkcompression.com/api-reference/json-rpc-methods/getmultiplenewaddressproofs.md): Retrieve proofs that the new addresses are not taken already and can be created. Overview with RPC method guide.
+- [null](https://www.zkcompression.com/api-reference/json-rpc-methods/gettransactionwithcompressioninfo.md): Retrieve the transaction data for the transaction with the given signature along with parsed compression info. RPC method guide with use cases, tips and examples.
+- [null](https://www.zkcompression.com/api-reference/json-rpc-methods/getvalidityproof.md): Retrieve a single ZK Proof used by the compression program to verify that the given accounts are valid and the new addresses can be created. RPC method guide with use cases, tips and examples.
+- [JSON RPC Methods](https://www.zkcompression.com/api-reference/json-rpc-methods/methods.md): Reference to all JSON RPC endpoints for ZK Compression on Solana.
+- [JSON RPC Methods](https://www.zkcompression.com/api-reference/json-rpc-methods/overview.md): Overview JSON RPC endpoints on Solana, best practices, and error codes.
+- [compressed-token](https://www.zkcompression.com/api-reference/libraries/compressed-token.md): TypeScript SDK for compressed tokens
+- [light-client](https://www.zkcompression.com/api-reference/libraries/light-client.md): Rust client for compressed accounts
+- [light-program-test](https://www.zkcompression.com/api-reference/libraries/light-program-test.md): Rust testing framework for programs using compressed accounts
+- [light-sdk](https://www.zkcompression.com/api-reference/libraries/light-sdk.md): Rust SDK for building on-chain programs with compressed accounts
+- [light-token](https://www.zkcompression.com/api-reference/libraries/light-token.md): Light Token program crate for rent-free token accounts and mints
+- [stateless.js](https://www.zkcompression.com/api-reference/libraries/stateless-js.md): TypeScript SDK for compressed accounts
+- [Client Guide](https://www.zkcompression.com/client-library/client-guide.md): Rust and Typescript client guides with step-by-step implementation and full code examples.
+- [Overview](https://www.zkcompression.com/compressed-pdas/guides.md): Overview to guides for Solana programs to create, update, close, reinitialize, and burn permanently compressed accounts.
+- [Burn Compressed Accounts](https://www.zkcompression.com/compressed-pdas/guides/how-to-burn-compressed-accounts.md): Guide to burn compressed accounts in Solana programs with full code examples.
+- [Close Compressed Accounts](https://www.zkcompression.com/compressed-pdas/guides/how-to-close-compressed-accounts.md): Guide to close compressed accounts in Solana programs with full code examples.
+- [Create Compressed Accounts](https://www.zkcompression.com/compressed-pdas/guides/how-to-create-compressed-accounts.md): Guide to create compressed accounts in Solana programs with full code examples.
+- [Reinitialize Compressed Accounts](https://www.zkcompression.com/compressed-pdas/guides/how-to-reinitialize-compressed-accounts.md): Guide to reinitialize compressed accounts in Solana programs with full code examples.
+- [Update Compressed Accounts](https://www.zkcompression.com/compressed-pdas/guides/how-to-update-compressed-accounts.md): Guide to update compressed accounts in Solana programs with full code examples.
+- [Overview & Program Template](https://www.zkcompression.com/compressed-pdas/overview.md): Compressed PDAs provide full functionality of accounts at PDAs, without rent-exemption per account.
+- [Program Examples](https://www.zkcompression.com/compressed-pdas/program-examples.md): Program example repository for compressed accounts with tests.
+- [Solana Attestation Service (Devnet)](https://www.zkcompression.com/compressed-pdas/solana-attestation-service.md): Build compressed attestations on Solana using ZK Compression. Currently undergoing audit.
+- [Add Wallet Support for Compressed Tokens](https://www.zkcompression.com/compressed-tokens/advanced-guides/add-wallet-support-for-compressed-tokens.md): Guide to add Compressed Token Support to Your Wallet Application
+- [Airdrop Guide with ZK Compression](https://www.zkcompression.com/compressed-tokens/advanced-guides/airdrop.md): Complete client and program guides to create an airdrop – with or without code. ZK compression is the most efficient way to distribute SPL tokens.
+- [Example Token Distribution](https://www.zkcompression.com/compressed-tokens/advanced-guides/example-token-distribution.md): Reference implementations for airdrops, payments, and rewards with ZK Compression
+- [Combine Instructions in One Transaction](https://www.zkcompression.com/compressed-tokens/advanced-guides/how-to-combine-operations-in-one-transaction.md): Guide to combine multiple instructions in a single transaction. Full code example for token pool creation and for first-time compression of existing SPL tokens.
+- [Use Token-2022 with Compression](https://www.zkcompression.com/compressed-tokens/advanced-guides/use-token-2022-with-compression.md): Complete guide to mint, compress and transfer tokens with Token-2022 Metadata with ZK Compression.
+- [Rent-Free SPL Accounts with Privy](https://www.zkcompression.com/compressed-tokens/for-privy.md): Integrate compressed tokens with Privy embedded wallets for rent-free SPL token accounts and transfers.
+- [Create Token Pools for Compression to Existing Mints](https://www.zkcompression.com/compressed-tokens/guides/add-token-pools-to-mint-accounts.md): Create a token pool for an existing SPL mint. Requires only fee_payer with no mint authority constraint.
+- [Compress and Decompress SPL Tokens](https://www.zkcompression.com/compressed-tokens/guides/compress-decompress.md): Convert SPL tokens between compressed and regular format with compress() and decompress().
+- [Compress Complete SPL Token Accounts](https://www.zkcompression.com/compressed-tokens/guides/compress-spl-token-account.md): Compress the entire balance of an SPL token account to reclaim rent. Optionally leave some tokens in SPL format.
+- [Create Compressed Token Accounts](https://www.zkcompression.com/compressed-tokens/guides/create-compressed-token-accounts.md): Short guide to compressed token account creation with ZK Compression on Solana and difference to regular token accounts.
+- [Create a Mint Account with Token Pool for Compression](https://www.zkcompression.com/compressed-tokens/guides/create-mint-with-token-pool.md): Create an SPL token mint with a token pool for compression. The token pool locks tokens while compressed and releases them when decompressed.
+- [Approve and Revoke Delegate Authority](https://www.zkcompression.com/compressed-tokens/guides/delegate.md): Grant and remove delegate spending authority for compressed tokens with approve() and revoke(). Only the token owner can perform these operations.
+- [Merge Compressed Token Accounts](https://www.zkcompression.com/compressed-tokens/guides/merge-compressed-token-accounts.md): Consolidate multiple compressed token accounts of the same mint into a single account to reduce fragmentation.
+- [Mint Compressed Tokens](https://www.zkcompression.com/compressed-tokens/guides/mint-compressed-tokens.md): Mint tokens to compressed token accounts for recipients and increases a mint's token supply. Only the mint authority can perform this operation. 
+- [Transfer Compressed Tokens](https://www.zkcompression.com/compressed-tokens/guides/transfer-compressed-tokens.md): Transfer compressed tokens between accounts. Transfers consume input accounts and create new output accounts with updated balances.
+- [Overview](https://www.zkcompression.com/compressed-tokens/overview.md): Overview to compressed tokens and guides with full code examples. Use for distributing tokens (eg rewards, airdrops) or creating associated token accounts for users.
+- [Home](https://www.zkcompression.com/home.md)
+- [AI Tools Guide](https://www.zkcompression.com/learn/ai-tools-guide.md): Guidance to AI tools when working with ZK Compression. Includes MCP server, DeepWiki, and AI Search guides.
+- [High-level System Overview](https://www.zkcompression.com/learn/core-concepts.md): Overview to ZK Compression's Core Concepts. Get a high-level system overview and learn about the compressed account model, lifecycle of a transaction, and considerations.
+- [Compressed Account Model](https://www.zkcompression.com/learn/core-concepts/compressed-account-model.md): Overview to compressed accounts and comparison to Solana accounts.
+- [Considerations](https://www.zkcompression.com/learn/core-concepts/considerations.md): Overview to considerations of ZK Compression, namely larger transaction size, higher compute unit usage, and per-transaction state cost.
+- [Merkle trees and Validity Proofs](https://www.zkcompression.com/learn/core-concepts/merkle-trees-validity-proofs.md): Learn the core concepts of state trees, address trees, and validity proofs for compressed accounts.
+- [Lifecycle of a Transaction](https://www.zkcompression.com/learn/core-concepts/transaction-lifecycle.md): Overview to the lifecycle of a transaction that interacts with compressed accounts.
+- [Core Concepts to the Light Token Program (Beta)](https://www.zkcompression.com/learn/light-token-standard.md): The Light Token Program is a high performance token program that reduces the cost of account creations by 200x, while being more CU efficient than SPL on hot paths.
+- [Close Light Token Account](https://www.zkcompression.com/light-token/cookbook/close-token-account.md): Program guide to close light-token accounts via CPI. Includes step-by-step implementation and full code examples.
+- [Create Associated Light Token Accounts](https://www.zkcompression.com/light-token/cookbook/create-ata.md): Client and program guide to create associated light-token accounts. Includes step-by-step implementation and full code examples.
+- [Create Mint Account wih Token Metadata](https://www.zkcompression.com/light-token/cookbook/create-mint.md): Program and client guides to create a mint with token metadata. Includes step-by-step implementation and full code examples.
+- [Create Light Token Account](https://www.zkcompression.com/light-token/cookbook/create-token-account.md): Client and program guide to create light-token accounts. Includes step-by-step implementation and full code examples.
+- [Load Token Balances to Light ATA](https://www.zkcompression.com/light-token/cookbook/load-ata.md): Unify token balances from compressed tokens (cold), SPL, and Token-2022 to one light ATA.
+- [Mint to Light Token Accounts](https://www.zkcompression.com/light-token/cookbook/mint-to.md): Client and program guide to mint tokens to a account. Includes step-by-step implementation and full code examples.
+- [Light Token Cookbook](https://www.zkcompression.com/light-token/cookbook/overview.md): Client and program guides using the light-token-sdk.
+- [Transfer Interface](https://www.zkcompression.com/light-token/cookbook/transfer-interface.md): Program and client guide for transfers between light-token and SPL token accounts. The interface detects account types and invokes the right programs.
+- [Wrap & Unwrap SPL/Token-22 <> Light Token](https://www.zkcompression.com/light-token/cookbook/wrap-unwrap.md): Move tokens between SPL/Token-22 token and light-token accounts. Use to interact with applications that only support SPL/Token-22.
+- [Program Integration](https://www.zkcompression.com/light-token/defi/programs.md): Build high-performance DeFi programs with rent-free accounts
+- [Router Integration](https://www.zkcompression.com/light-token/defi/routers.md): Add support for rent-free AMMs on Solana.
+- [FAQ](https://www.zkcompression.com/light-token/faq.md): Frequently asked questions about light-token.
+- [Quickstart](https://www.zkcompression.com/light-token/quickstart.md): Mint tokens to a Light-ATA in under 3 minutes.
+- [Toolkit for Stablecoin Payments](https://www.zkcompression.com/light-token/toolkits/for-payments.md): Guide to integrate light-token APIs with comparison to SPL.
+- [Toolkit for Wallet Applications](https://www.zkcompression.com/light-token/toolkits/for-wallets.md): Guide for Wallet Applications to add Light-token support.
+- [Overview of Toolkits](https://www.zkcompression.com/light-token/toolkits/overview.md): Integration toolkits for light-token on Solana.
+- [The Light Token Program](https://www.zkcompression.com/light-token/welcome.md): Light token is a high-performance token standard that reduces the cost of mint and token accounts by 200x.
+- [Quickstart](https://www.zkcompression.com/quickstart.md): Create your first compressed tokens in under 5 minutes.
+- [Light Token terminology](https://www.zkcompression.com/references/light-token-terminology.md): Terminology for Light Token concepts and operations
+- [Guide to Migrate from v1 to v2 Merkle trees](https://www.zkcompression.com/references/migration-v1-to-v2.md): V2 reduces CU consumption by up to 70%. V1 remains supported for existing deployments.
+- [Node Operators](https://www.zkcompression.com/references/node-operators.md): Learn how to run ZK Compression infrastructure, such as Forester nodes, Photon indexers and Prover nodes.
+- [Security](https://www.zkcompression.com/references/security.md): Overview to Light Protocol's bug bounty program, third party security audits, and formal verification of circuits.
+- [Terminology](https://www.zkcompression.com/references/terminology.md): Overview to terminology related to ZK Compression and Solana
+- [Whitepaper](https://www.zkcompression.com/references/whitepaper.md): Whitepaper introducing ZK Compression
+- [Addresses and URLs](https://www.zkcompression.com/resources/addresses-and-urls.md): Overview to all of ZK Compression's RPC URLs, Program IDs & Accounts and Lookup Tables.
+- [CLI Installation & Commands](https://www.zkcompression.com/resources/cli-installation.md): Steps to set up your local environment for ZK Compression development. CLI to interact with compressed accounts and compressed tokens on Solana.
+- [Error Cheatsheet](https://www.zkcompression.com/resources/error-cheatsheet.md): Complete error code reference for ZK Compression. Search error codes with hex values and messages.
+- [Debug ProofVerificationFailed (0x179b)](https://www.zkcompression.com/resources/error-cheatsheet/debug-0x179b-6043-proofverificationfailed.md): Common cause and debug steps for ProofVerificationFailed (0x179B / 6043)
+- [Client Development](https://www.zkcompression.com/resources/sdks/client-development.md): Overview of Rust and TypeScript SDKs for client side development.
+- [Program Development](https://www.zkcompression.com/resources/sdks/program-development.md): Overview of on-chain program development using Anchor, Pinocchio, or native Rust SDKs.
+- [Support](https://www.zkcompression.com/support.md): Get expert help with Light-Token and ZK Compression. Discord community, Telegram, and Email support available.
+- [Welcome to ZK Compression](https://www.zkcompression.com/welcome.md): ZK Compression is a Solana account primitive that lets you create tokens and PDAs without rent-exemption with L1 performance and security.
+- [Examples](https://www.zkcompression.com/zk/examples.md): Example projects for building ZK programs on Solana.
+- [Primitives for ZK on Solana](https://www.zkcompression.com/zk/overview.md): Overview how to build a ZK program on Solana.

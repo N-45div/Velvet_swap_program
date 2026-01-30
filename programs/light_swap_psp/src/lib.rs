@@ -308,11 +308,9 @@ pub mod light_swap_psp {
         let inco_token_program = ctx.accounts.inco_token_program.to_account_info();
         let signer = ctx.accounts.fee_payer.to_account_info();
 
-        // Verify pool authority
-        let (expected_pool_authority, bump) = Pubkey::find_program_address(
-            &[POOL_AUTH_SEED, pool_account.mint_a.as_ref(), pool_account.mint_b.as_ref()],
-            &crate::ID,
-        );
+        // Verify pool authority - use bump from Anchor's verified constraint
+        let bump = ctx.bumps.pool_authority;
+        let expected_pool_authority = ctx.accounts.pool_authority.key();
         require_keys_eq!(pool_account.pool_authority, expected_pool_authority);
 
         // Get reserves based on swap direction
@@ -381,8 +379,9 @@ pub mod light_swap_psp {
         inco_token_transfer(transfer_in_ctx, amount_in_ciphertext.clone(), input_type)?;
 
         // CPI: Transfer amount_out from pool vault to user (pool authority PDA signs)
-        let mint_a_key = pool_account.mint_a;
-        let mint_b_key = pool_account.mint_b;
+        // Use the same mints that Anchor verified the pool_authority against
+        let mint_a_key = ctx.accounts.user_token_a.mint;
+        let mint_b_key = ctx.accounts.user_token_b.mint;
         let pool_auth_seeds: &[&[u8]] = &[
             POOL_AUTH_SEED,
             mint_a_key.as_ref(),
@@ -447,8 +446,8 @@ pub struct RemoveLiquidity<'info> {
 pub struct SwapExactIn<'info> {
     #[account(mut)]
     pub fee_payer: Signer<'info>,
-    /// CHECK: Pool authority PDA for signing token transfers
-    #[account(seeds = [POOL_AUTH_SEED, user_token_a.mint.as_ref(), user_token_b.mint.as_ref()], bump)]
+    /// CHECK: Pool authority PDA for signing token transfers (mut required for CPI)
+    #[account(mut, seeds = [POOL_AUTH_SEED, user_token_a.mint.as_ref(), user_token_b.mint.as_ref()], bump)]
     pub pool_authority: AccountInfo<'info>,
     /// User's Inco token account for token A
     #[account(mut)]
