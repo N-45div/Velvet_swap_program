@@ -1,9 +1,4 @@
 use anchor_lang::prelude::*;
-use ephemeral_rollups_sdk::access_control::instructions::CreatePermissionCpiBuilder;
-use ephemeral_rollups_sdk::access_control::structs::{Member, MembersArgs};
-use ephemeral_rollups_sdk::anchor::{delegate, ephemeral};
-use ephemeral_rollups_sdk::consts::PERMISSION_PROGRAM_ID;
-use ephemeral_rollups_sdk::cpi::DelegateConfig;
 use inco_lightning::cpi::accounts::Operation;
 use inco_lightning::cpi::{as_euint128, e_add, e_ge, e_mul, e_select, e_sub, new_euint128};
 use inco_lightning::types::{Ebool, Euint128};
@@ -105,59 +100,9 @@ fn compute_swap_updates<'info>(
     Ok((new_reserve_in, new_reserve_out, new_protocol_fee))
 }
 
-#[ephemeral]
 #[program]
 pub mod light_swap_psp {
     use super::*;
-
-    pub fn create_permission(
-        ctx: Context<CreatePermission>,
-        account_type: AccountType,
-        members: Option<Vec<Member>>,
-    ) -> Result<()> {
-        let CreatePermission {
-            permissioned_account,
-            permission,
-            payer,
-            permission_program,
-            system_program,
-        } = ctx.accounts;
-
-        let seed_data = derive_seeds_from_account_type(&account_type);
-        let seeds_slices: Vec<&[u8]> = seed_data.iter().map(|s| s.as_slice()).collect();
-        let (pda, bump) = Pubkey::find_program_address(&seeds_slices, &crate::ID);
-        require_keys_eq!(permissioned_account.key(), pda, ErrorCode::InvalidPermissionAccount);
-
-        let mut seeds = seed_data.clone();
-        seeds.push(vec![bump]);
-        let seed_refs: Vec<&[u8]> = seeds.iter().map(|s| s.as_slice()).collect();
-
-        CreatePermissionCpiBuilder::new(&permission_program)
-            .permissioned_account(&permissioned_account.to_account_info())
-            .permission(&permission)
-            .payer(&payer)
-            .system_program(&system_program)
-            .args(MembersArgs { members })
-            .invoke_signed(&[seed_refs.as_slice()])?;
-        Ok(())
-    }
-
-    /// Delegate pool authority PDA to the MagicBlock validator for PER execution.
-    pub fn delegate_pda(ctx: Context<DelegatePda>, account_type: AccountType) -> Result<()> {
-        let seed_data = derive_seeds_from_account_type(&account_type);
-        let seeds_refs: Vec<&[u8]> = seed_data.iter().map(|s| s.as_slice()).collect();
-
-        let validator = ctx.accounts.validator.as_ref().map(|v| v.key());
-        ctx.accounts.delegate_pda(
-            &ctx.accounts.payer,
-            &seeds_refs,
-            DelegateConfig {
-                validator,
-                ..Default::default()
-            },
-        )?;
-        Ok(())
-    }
 
     pub fn initialize_pool<'info>(
         ctx: Context<'_, '_, '_, 'info, InitializePool<'info>>,
@@ -447,32 +392,6 @@ pub struct SwapExactIn<'info> {
     pub inco_lightning_program: AccountInfo<'info>,
 }
 
-/// Unified delegate PDA context
-#[delegate]
-#[derive(Accounts)]
-pub struct DelegatePda<'info> {
-    /// CHECK: The PDA to delegate
-    #[account(mut, del)]
-    pub pda: AccountInfo<'info>,
-    pub payer: Signer<'info>,
-    /// CHECK: Checked by the delegation program
-    pub validator: Option<AccountInfo<'info>>,
-}
-
-#[derive(Accounts)]
-pub struct CreatePermission<'info> {
-    /// CHECK: Validated via permission program CPI
-    pub permissioned_account: UncheckedAccount<'info>,
-    /// CHECK: Checked by the permission program
-    #[account(mut)]
-    pub permission: UncheckedAccount<'info>,
-    #[account(mut)]
-    pub payer: Signer<'info>,
-    /// CHECK: PERMISSION PROGRAM
-    #[account(address = PERMISSION_PROGRAM_ID)]
-    pub permission_program: UncheckedAccount<'info>,
-    pub system_program: Program<'info, System>,
-}
 
 #[derive(
     Clone,
@@ -504,23 +423,7 @@ pub enum ErrorCode {
     InvalidInputMint,
     #[msg("Output mint does not match pool")]
     InvalidOutputMint,
-    #[msg("Invalid permissioned account")]
-    InvalidPermissionAccount,
     #[msg("Unauthorized - only pool authority can perform this action")]
     Unauthorized,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
-pub enum AccountType {
-    PoolAuthority { mint_a: Pubkey, mint_b: Pubkey },
-}
-
-fn derive_seeds_from_account_type(account_type: &AccountType) -> Vec<Vec<u8>> {
-    match account_type {
-        AccountType::PoolAuthority { mint_a, mint_b } => vec![
-            POOL_AUTH_SEED.to_vec(),
-            mint_a.to_bytes().to_vec(),
-            mint_b.to_bytes().to_vec(),
-        ],
-    }
-}
