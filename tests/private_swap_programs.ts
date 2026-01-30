@@ -39,14 +39,21 @@ const TEE_URL = "https://tee.magicblock.app";
 const TEE_WS_URL = "wss://tee.magicblock.app";
 const INPUT_TYPE = 0;
 const DECIMALS = 9;
+const DEFAULT_DEVNET_RPC = "https://api.devnet.solana.com";
 
 describe("private_swap_programs", function () {
-  this.timeout(200000);
+  this.timeout(400000);
 
-  const connection = new Connection(
-    process.env.ANCHOR_PROVIDER_URL || "https://api.devnet.solana.com",
-    "confirmed"
-  );
+  const apiKey = process.env.HELIUS_DEVNET_API_KEY;
+  const defaultRpcUrl =
+    process.env.HELIUS_DEVNET_RPC_URL ||
+    (apiKey ? `https://devnet.helius-rpc.com/?api-key=${apiKey}` : DEFAULT_DEVNET_RPC);
+  const rpcUrl = process.env.ANCHOR_PROVIDER_URL || defaultRpcUrl;
+  process.env.ANCHOR_PROVIDER_URL = rpcUrl;
+  process.env.ANCHOR_WALLET =
+    process.env.ANCHOR_WALLET || `${process.env.HOME}/.config/solana/id.json`;
+
+  const connection = new Connection(rpcUrl, "confirmed");
   const provider = new anchor.AnchorProvider(
     connection,
     anchor.AnchorProvider.env().wallet,
@@ -92,6 +99,18 @@ describe("private_swap_programs", function () {
   const computeBudgetIxs = () => [
     ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
   ];
+
+  const requireTeeProvider = () => {
+    if (providerTee) {
+      return providerTee;
+    }
+    if (process.env.REQUIRE_TEE === "false") {
+      return provider;
+    }
+    throw new Error(
+      "TEE provider was not initialized. Set EPHEMERAL_PROVIDER_ENDPOINT or REQUIRE_TEE=false to bypass."
+    );
+  };
 
   const logSendTransactionError = async (
     error: unknown,
@@ -357,13 +376,12 @@ describe("private_swap_programs", function () {
       ephemeralRpcEndpoint,
       poolPda
     );
-    if (isActive) {
-      console.log("✅ Pool permission active:", poolPda.toBase58());
-      const status = await getPermissionStatus(ephemeralRpcEndpoint, poolPda);
-      console.log("Pool permission users:", status.authorizedUsers ?? []);
-    } else {
-      console.log("❌ Pool permission not active:", poolPda.toBase58());
+    if (!isActive) {
+      throw new Error(`Pool permission not active: ${poolPda.toBase58()}`);
     }
+    console.log("✅ Pool permission active:", poolPda.toBase58());
+    const status = await getPermissionStatus(ephemeralRpcEndpoint, poolPda);
+    console.log("Pool permission users:", status.authorizedUsers ?? []);
 
     const ensurePermissionForTokenAccount = async (
       label: string,
@@ -445,16 +463,12 @@ describe("private_swap_programs", function () {
       }
 
       const active = await waitUntilPermissionActive(ephemeralRpcEndpoint, account);
-      if (active) {
-        console.log(`✅ ${label} permission active:`, account.toBase58());
-        const status = await getPermissionStatus(
-          ephemeralRpcEndpoint,
-          account
-        );
-        console.log(`${label} permission users:`, status.authorizedUsers ?? []);
-      } else {
-        console.log(`❌ ${label} permission not active:`, account.toBase58());
+      if (!active) {
+        throw new Error(`Permission not active for ${label}: ${account.toBase58()}`);
       }
+      console.log(`✅ ${label} permission active:`, account.toBase58());
+      const status = await getPermissionStatus(ephemeralRpcEndpoint, account);
+      console.log(`${label} permission users:`, status.authorizedUsers ?? []);
     };
 
     await ensurePermissionForTokenAccount(
@@ -507,7 +521,7 @@ describe("private_swap_programs", function () {
       })
       .transaction();
 
-    const teeProvider = providerTee ?? provider;
+    const teeProvider = requireTeeProvider();
     try {
       const teeCheck = await teeProvider.connection.getAccountInfo(
         userTokenA
@@ -560,7 +574,7 @@ describe("private_swap_programs", function () {
       })
       .transaction();
 
-    const teeProvider = providerTee ?? provider;
+    const teeProvider = requireTeeProvider();
     swapTx.feePayer = authority;
     swapTx.recentBlockhash = (
       await teeProvider.connection.getLatestBlockhash()
@@ -602,7 +616,7 @@ describe("private_swap_programs", function () {
       })
       .transaction();
 
-    const teeProvider = providerTee ?? provider;
+    const teeProvider = requireTeeProvider();
     removeLiquidityTx.feePayer = authority;
     removeLiquidityTx.recentBlockhash = (
       await teeProvider.connection.getLatestBlockhash()
