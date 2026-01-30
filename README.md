@@ -4,15 +4,14 @@
 [![Light Protocol](https://img.shields.io/badge/Light%20Protocol-V2-3B82F6)](https://lightprotocol.com)
 [![Inco Network](https://img.shields.io/badge/Inco-FHE-22C55E)](https://inco.network)
 
-## Privacy Layer Status (Verified)
+## Privacy Layers
 
-| Layer | Status | Details |
-|-------|--------|--------|
-| **Light Protocol (ZK)** | ✅ Working | Pool stored as compressed account at `1QJcNYRBuDKQnWQofUQNwFg9MRoqgoLAUhW5js2ApS2` |
-| **Inco Lightning (FHE)** | ✅ Working | Pool data: 203 bytes of FHE ciphertexts (Euint128 reserves) |
-| **MagicBlock TEE** | ⚠️ Incompatible | TEE cannot clone Light Protocol programs from mainstate |
+| Layer | Technology | What's Protected |
+|-------|------------|------------------|
+| **FHE (Inco Lightning)** | Homomorphic encryption | Pool reserves, swap amounts, fees - all encrypted as `Euint128` |
+| **ZK (Light Protocol V2)** | Zero-knowledge proofs | Pool state stored as compressed account with validity proofs |
 
-> **Note:** MagicBlock PER permissions are configured but TEE execution is incompatible with Light Protocol. Swaps execute on devnet with FHE + ZK privacy.
+> **Why not TEE?** MagicBlock TEE creates an isolated ephemeral environment that cannot clone Light Protocol programs from Solana mainstate. See `scripts/verify-privacy-layers.ts` for proof.
 
 ---
 

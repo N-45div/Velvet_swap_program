@@ -4,17 +4,24 @@
 
 ---
 
-## Privacy Layer Status (Verified)
+## Privacy Layers
 
-Verified via `scripts/verify-privacy-layers.ts`:
+| Layer | Technology | What's Protected |
+|-------|------------|------------------|
+| **FHE (Inco Lightning)** | Homomorphic encryption | Pool reserves, swap amounts, fees stored as `Euint128` |
+| **ZK (Light Protocol V2)** | Zero-knowledge proofs | Pool state in compressed accounts with validity proofs |
 
-| Layer | Status | Test Result |
-|-------|--------|-------------|
-| **Light Protocol (ZK)** | ✅ Working | Pool at `1QJcNYRBuDKQnWQofUQNwFg9MRoqgoLAUhW5js2ApS2`, leafIndex 290427 |
-| **Inco Lightning (FHE)** | ✅ Working | Program deployed, pool data: 203 bytes FHE ciphertexts |
-| **MagicBlock TEE** | ❌ Incompatible | `Cloner error: Failed to clone program SySTEM1eSU2p4BGQfQpimFEWWSC1XDFeun3Nqzz3rT7` |
+### Why Not TEE?
 
-> **TEE Limitation:** MagicBlock PER creates an isolated ephemeral environment that cannot clone Light Protocol programs from devnet mainstate. Swaps execute on devnet directly with FHE + ZK privacy.
+MagicBlock TEE was evaluated but is **incompatible** with Light Protocol:
+
+```
+Error: Cloner error: Failed to clone program SySTEM1eSU2p4BGQfQpimFEWWSC1XDFeun3Nqzz3rT7
+```
+
+- Light Protocol programs require merkle trees stored on Solana mainstate
+- TEE creates isolated ephemeral environment that cannot access mainstate programs
+- Verified via `scripts/verify-privacy-layers.ts`
 
 ---
 
@@ -28,9 +35,8 @@ graph TB
     end
 
     subgraph "Privacy Layer"
-        INCO["Inco Lightning<br/>FHE Operations ✅"]
-        LIGHT["Light Protocol V2<br/>ZK Compressed Accounts ✅"]
-        PER["MagicBlock PER<br/>TEE ❌ Incompatible"]
+        INCO["Inco Lightning<br/>FHE Encryption"]
+        LIGHT["Light Protocol V2<br/>ZK Compression"]
     end
 
     subgraph "Solana Runtime"
@@ -43,13 +49,11 @@ graph TB
     PROGRAM --> INCO
     PROGRAM --> LIGHT
     PROGRAM --> POOL
-    PER -.-> |"Cannot clone<br/>Light programs"| PROGRAM
 
     style UI fill:#7C3AED,color:#fff
     style SDK fill:#7C3AED,color:#fff
     style INCO fill:#22C55E,color:#fff
     style LIGHT fill:#3B82F6,color:#fff
-    style PER fill:#6B7280,color:#fff
     style PROGRAM fill:#9945FF,color:#fff
     style POOL fill:#1e1e2e,color:#fff,stroke:#9945FF
 ```
