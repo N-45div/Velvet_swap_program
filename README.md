@@ -48,8 +48,14 @@ graph TB
 |-------|-------|
 | **Program ID** | `4b8jCufu7b4WKXdxFRQHWSks4QdskW62qF7tApSNXuZD` |
 | **Network** | Solana Devnet |
-| **Permanent Pool** | SOL/USDC @ `1QJcNYRBuDKQnWQofUQNwFg9MRoqgoLAUhW5js2ApS2` |
-| **Explorer** | [View on Solscan](https://solscan.io/account/4b8jCufu7b4WKXdxFRQHWSks4QdskW62qF7tApSNXuZD?cluster=devnet) |
+| **Inco Token Program** | `CYVSeUyVzHGVcrxsJt3E8tbaPCQT8ASdRR45g5WxUEW7` |
+| **Inco Lightning Program** | `5sjEbPiqgZrYwR31ahR6Uk9wf5awoX61YGg7jExQSwaj` |
+| **Pool Authority PDA** | `DSM8WDdZ5s3xkKbjtmzxpd59J42cuTZ1AJtFJTzLMkFS` |
+| **Inco Mint A (wSOL)** | `4AJDgxnHDNP7y9wSD24sP7YUhQrMyprLUeuRwEwYu6cy` |
+| **Inco Mint B (USDC)** | `CvymLX1Tm6btpRJdfGeQ34k726yQnXSn1V7G4fworMaG` |
+| **Pool Vault A** | `8cEgrChzTtBxucAFqSnM5QAR1NuKRZEs5Z1U9QEfLsKi` |
+| **Pool Vault B** | `DoESWTXqLEiKyUWVUGKXhTQXrL3oN5HLiRxG781W8Hwx` |
+| **Example Swap TX** | [View on Explorer](https://explorer.solana.com/tx/3kbJFHbfGKVKyf6xEs5jLnWcYnRjh7mNQa6o6kXjbRhGQb8kQMhnzhFaQA8WDE4joHGExxmguSRTJfGqMXpeHogB?cluster=devnet) |
 
 ---
 
@@ -64,7 +70,7 @@ graph TB
 | Pool reserves (A & B) | **Encrypted** | Inco FHE `Euint128` |
 | Protocol fees | **Encrypted** | Inco FHE `Euint128` |
 | Pool state location | **Compressed** | Light Protocol ZK proofs |
-| Transaction execution | **TEE-shielded** | MagicBlock PER |
+| Token balances | **Encrypted** | Inco Token c-SPL |
 
 ### Confidential Swap Flow
 
@@ -72,24 +78,30 @@ graph TB
 sequenceDiagram
     participant User
     participant Frontend
-    participant TEE as MagicBlock TEE
     participant Program as VelvetSwap
-    participant Inco as Inco Lightning
+    participant IncoToken as Inco Token (c-SPL)
+    participant IncoFHE as Inco Lightning (FHE)
     participant Light as Light Protocol
 
-    User->>Frontend: Enter swap amount
-    Frontend->>Frontend: Encrypt amount (FHE)
-    Frontend->>TEE: Submit via PER endpoint
-    TEE->>Program: Execute swap_exact_in
-    Program->>Inco: e_add(reserve_in, amount_in)
-    Program->>Inco: e_sub(reserve_out, amount_out)
-    Program->>Inco: e_mul() for k invariant check
-    Program->>Inco: e_ge() verify new_k >= old_k
-    Program->>Light: Update compressed pool state
-    Light-->>Program: New validity proof
-    Program-->>TEE: Swap complete
-    TEE-->>Frontend: Transaction signature
-    Frontend-->>User: Success!
+    User->>Frontend: Enter swap amount (0.03 SOL)
+    Frontend->>Frontend: Encrypt amount as Euint128
+    Frontend->>Light: Fetch pool state + validity proof
+    Light-->>Frontend: Compressed pool data
+    Frontend->>Program: swap_exact_in(encrypted_amounts)
+    
+    Note over Program,IncoFHE: FHE Arithmetic on Encrypted Values
+    Program->>IncoFHE: e_add(reserve_in, amount_in)
+    Program->>IncoFHE: e_sub(reserve_out, amount_out)
+    Program->>IncoFHE: e_select() for conditional updates
+    
+    Note over Program,IncoToken: Confidential Token Transfers
+    Program->>IncoToken: transfer(user → pool_vault, encrypted_in)
+    Program->>IncoToken: transfer(pool_vault → user, encrypted_out)
+    
+    Program->>Light: Commit updated pool state
+    Light-->>Program: State finalized
+    Program-->>Frontend: Transaction signature
+    Frontend-->>User: "Private swap completed!"
 ```
 
 ---
