@@ -3,6 +3,9 @@ use inco_lightning::cpi::accounts::Operation;
 use inco_lightning::cpi::{as_euint128, e_add, e_ge, e_mul, e_select, e_sub, new_euint128};
 use inco_lightning::types::{Ebool, Euint128};
 use inco_lightning::ID as INCO_LIGHTNING_ID;
+use inco_token::cpi::accounts::IncoTransfer;
+use inco_token::cpi::transfer as inco_token_transfer;
+use inco_token::{IncoAccount, ID as INCO_TOKEN_ID};
 use light_sdk::{
     account::LightAccount,
     address::v2::derive_address,
@@ -19,6 +22,7 @@ pub const LIGHT_CPI_SIGNER: CpiSigner =
     derive_light_cpi_signer!("4b8jCufu7b4WKXdxFRQHWSks4QdskW62qF7tApSNXuZD");
 
 const POOL_AUTH_SEED: &[u8] = b"pool_authority";
+const POOL_VAULT_SEED: &[u8] = b"pool_vault";
 const SCALAR_BYTE: u8 = 0;
 
 /// Compute encrypted swap updates using Inco Lightning FHE operations
@@ -273,7 +277,7 @@ pub mod light_swap_psp {
     }
 
     /// Execute a private swap with encrypted amounts
-    /// Token transfers are handled separately via compressed token program
+    /// Includes CPI to Inco Token for actual token transfers
     pub fn swap_exact_in<'info>(
         ctx: Context<'_, '_, '_, 'info, SwapExactIn<'info>>,
         proof: SdkValidityProof,
@@ -301,10 +305,11 @@ pub mod light_swap_psp {
         require!(!pool_account.is_paused, ErrorCode::PoolPaused);
 
         let inco_program = ctx.accounts.inco_lightning_program.to_account_info();
+        let inco_token_program = ctx.accounts.inco_token_program.to_account_info();
         let signer = ctx.accounts.fee_payer.to_account_info();
 
         // Verify pool authority
-        let (expected_pool_authority, _) = Pubkey::find_program_address(
+        let (expected_pool_authority, bump) = Pubkey::find_program_address(
             &[POOL_AUTH_SEED, pool_account.mint_a.as_ref(), pool_account.mint_b.as_ref()],
             &crate::ID,
         );
@@ -343,7 +348,62 @@ pub mod light_swap_psp {
 
         pool_account.last_update_ts = Clock::get()?.unix_timestamp;
 
-        // Commit pool state update
+        // === TOKEN TRANSFERS via Inco Token CPI ===
+        
+        // Transfer token_in FROM user TO pool vault
+        let (user_token_in, pool_vault_in, user_token_out, pool_vault_out) = if a_to_b {
+            (
+                ctx.accounts.user_token_a.to_account_info(),
+                ctx.accounts.pool_vault_a.to_account_info(),
+                ctx.accounts.user_token_b.to_account_info(),
+                ctx.accounts.pool_vault_b.to_account_info(),
+            )
+        } else {
+            (
+                ctx.accounts.user_token_b.to_account_info(),
+                ctx.accounts.pool_vault_b.to_account_info(),
+                ctx.accounts.user_token_a.to_account_info(),
+                ctx.accounts.pool_vault_a.to_account_info(),
+            )
+        };
+
+        // CPI: Transfer amount_in from user to pool vault (user signs)
+        let transfer_in_ctx = CpiContext::new(
+            inco_token_program.clone(),
+            IncoTransfer {
+                source: user_token_in,
+                destination: pool_vault_in,
+                authority: signer.clone(),
+                inco_lightning_program: inco_program.clone(),
+                system_program: ctx.accounts.system_program.to_account_info(),
+            },
+        );
+        inco_token_transfer(transfer_in_ctx, amount_in_ciphertext.clone(), input_type)?;
+
+        // CPI: Transfer amount_out from pool vault to user (pool authority PDA signs)
+        let mint_a_key = pool_account.mint_a;
+        let mint_b_key = pool_account.mint_b;
+        let pool_auth_seeds: &[&[u8]] = &[
+            POOL_AUTH_SEED,
+            mint_a_key.as_ref(),
+            mint_b_key.as_ref(),
+            &[bump],
+        ];
+        let signer_seeds = &[pool_auth_seeds];
+        let transfer_out_ctx = CpiContext::new_with_signer(
+            inco_token_program,
+            IncoTransfer {
+                source: pool_vault_out,
+                destination: user_token_out,
+                authority: ctx.accounts.pool_authority.to_account_info(),
+                inco_lightning_program: inco_program,
+                system_program: ctx.accounts.system_program.to_account_info(),
+            },
+            signer_seeds,
+        );
+        inco_token_transfer(transfer_out_ctx, amount_out_ciphertext.clone(), input_type)?;
+
+        // Commit pool state update to Light Protocol
         LightSystemProgramCpi::new_cpi(crate::LIGHT_CPI_SIGNER, proof)
             .with_light_account(pool_account)?
             .invoke(light_cpi_accounts)?;
@@ -387,9 +447,28 @@ pub struct RemoveLiquidity<'info> {
 pub struct SwapExactIn<'info> {
     #[account(mut)]
     pub fee_payer: Signer<'info>,
+    /// CHECK: Pool authority PDA for signing token transfers
+    #[account(seeds = [POOL_AUTH_SEED, user_token_a.mint.as_ref(), user_token_b.mint.as_ref()], bump)]
+    pub pool_authority: AccountInfo<'info>,
+    /// User's Inco token account for token A
+    #[account(mut)]
+    pub user_token_a: Account<'info, IncoAccount>,
+    /// User's Inco token account for token B  
+    #[account(mut)]
+    pub user_token_b: Account<'info, IncoAccount>,
+    /// Pool vault for token A (owned by pool_authority)
+    #[account(mut, constraint = pool_vault_a.owner == pool_authority.key())]
+    pub pool_vault_a: Account<'info, IncoAccount>,
+    /// Pool vault for token B (owned by pool_authority)
+    #[account(mut, constraint = pool_vault_b.owner == pool_authority.key())]
+    pub pool_vault_b: Account<'info, IncoAccount>,
     /// CHECK: Inco Lightning program for encrypted operations
     #[account(address = INCO_LIGHTNING_ID)]
     pub inco_lightning_program: AccountInfo<'info>,
+    /// CHECK: Inco Token program for token transfers
+    #[account(address = INCO_TOKEN_ID)]
+    pub inco_token_program: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 

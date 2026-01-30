@@ -22,6 +22,7 @@ anchor-lang = "0.31.1"
 light-sdk = { version = "0.19.0", features = ["anchor", "v2", "cpi-context"] }
 light-compressed-account = { version = "0.3.0", features = ["anchor"] }
 inco-lightning = { version = "0.1.4", features = ["cpi"] }
+inco-token = { path = "../../deps/lightning-rod-solana/programs/inco-token", features = ["cpi"] }
 borsh = "0.10.4"
 
 [lints.rust]
