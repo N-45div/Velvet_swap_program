@@ -274,7 +274,7 @@ const tx = await swapExactIn({
 
 | Resource | URL |
 |----------|-----|
-| Frontend | [velvet-rope](https://github.com/VelvetSwap/Velvet_frontend) |
+| Frontend | [VelvetSwap Frontend](https://github.com/VelvetSwap/Velvet_frontend) |
 | Inco Lightning Docs | https://docs.inco.org/svm/home |
 | Light Protocol Docs | https://docs.lightprotocol.com |
 | Range Protocol Docs | https://docs.range.org/risk-api/risk-introduction |
