@@ -1,3 +1,110 @@
+# VelvetMesh by VelvetSwap
+
+> No shared pools. No leaked intent. Verified private fills.
+
+VelvetMesh is private poolless liquidity for Solana. It extends the existing
+VelvetSwap confidential AMM into a private P2P intent/RFQ network where users
+create encrypted trade intents and makers, fillers, or agents compete to fill
+them privately.
+
+VelvetSwap remains the confidential AMM fallback and settlement layer. The
+existing `light_swap_psp` program is preserved; VelvetMesh is added as a new
+layer beside it, not as a rewrite.
+
+## Hackathon Focus
+
+The core target is Arcium-powered private matching for capital markets:
+
+- **Arcium**: confidential RFQ matching over encrypted user intents and maker
+  quotes.
+- **Umbra**: shielded payout or withdrawal flows after a private match is
+  verified.
+- **MagicBlock**: real-time private RFQ sessions for maker/filler quote flow.
+
+Secondary modules are documented but not core to the product thesis:
+
+- Encrypt as an alternative encrypted-compute track if needed.
+- Ika as a parked future bridgeless route only, because the current Solana
+  pre-alpha uses mock-signer semantics.
+- Torque for maker/filler incentives.
+- Jupiter for public fallback quotes and routing comparison.
+
+## Program Shape
+
+The new Anchor program lives under `programs/velvet_mesh` and stores private
+intent/RFQ state with Arcium-oriented computation request/result fields.
+VelvetSwap remains the existing confidential AMM fallback and settlement
+foundation.
+
+## Target Architecture
+
+```txt
+User
+  -> VelvetMesh private intent/RFQ layer
+    -> Arcium confidential RFQ computation
+    -> private maker/filler quote selection
+    -> settlement router
+      -> direct Solana P2P fill
+      -> VelvetSwap confidential AMM fallback
+      -> Umbra shielded payout path
+      -> MagicBlock real-time RFQ session handoff
+      -> Jupiter public fallback quote
+```
+
+## Current Implementation Status
+
+The current repo contains the existing VelvetSwap Anchor program under
+`programs/light_swap_psp`. It uses Light Protocol compressed accounts, Inco
+encrypted values, Inco Token confidential token transfers, and MagicBlock
+dependencies in test/demo scripts.
+
+The new `programs/velvet_mesh` program adds the Rust state machine for private
+intent creation, quote submission, Arcium match requests, verifier-recorded
+private match results, accepted matches, and settlement readiness.
+
+Arcium matching is not mocked. Arcium-backed intents can request private
+matching, but they cannot be accepted for settlement until the configured match
+verifier records a selected quote whose commitment, route, and computation id
+match the requested private computation. In production that verifier should be
+the Arcium matcher's signer PDA used by the verified callback path, not a user
+wallet.
+
+Ika is intentionally parked for this submission. The Ika Solana pre-alpha
+surface is useful for future route design, but the current public developer
+guide says it uses a single mock signer and has no real distributed MPC security
+guarantees yet. VelvetMesh should therefore focus the current product demo on
+Arcium, Umbra, and MagicBlock, and avoid presenting Ika as an active sponsor
+integration until Ika's real Solana MPC path is available.
+
+Sponsor settlement is not a frontend-only toggle. Accepted matches now require
+a `prepare_settlement_handoff` payload before `mark_settlement_ready` can
+succeed, and settlement readiness must be confirmed by the configured
+`settlement_verifier`. The TypeScript sponsor adapters under `src/sponsors`
+use MagicBlock's live Private Payments API and the real `@umbra-privacy/sdk`
+package; missing sponsor payloads fail closed instead of falling back to mocks.
+
+Important limitation: the current `compute_swap_updates` function in
+`programs/light_swap_psp/src/lib.rs` is a demo passthrough. The repo should not
+claim production-complete encrypted constant-product reserve math until that
+path is implemented and verified.
+
+## Demo Script
+
+Use this flow for the recording:
+
+1. Open the VelvetMesh frontend on devnet and connect the funded wallet.
+2. Create a fresh `25 USDC -> SOL` private intent.
+3. Request the private match and show the intent move to match-ready.
+4. Accept the selected quote once the Arcium path is ready.
+5. Run `Settle USDC + shield wSOL`.
+6. Show the MagicBlock signature, the Umbra queue/callback signatures, and the recorded receipt in intent history.
+7. Open Solana Explorer and verify the real devnet transactions.
+
+The product story in the video should stay simple: Arcium matches privately,
+MagicBlock pays the USDC leg, and Umbra shields the wSOL payout balance.
+
+---
+
 # VelvetSwap — Confidential AMM for Solana
 
 [![Solana](https://img.shields.io/badge/Solana-Devnet-9945FF)](https://solana.com)
@@ -19,6 +126,10 @@
 ## Demo Video
 
 https://github.com/user-attachments/assets/baf6b35d-6741-479c-9336-4effe6609f7e
+
+## Demo Script
+
+Use [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) as the recording runbook. It matches the current product flow: create a private intent, request or accept the private match, settle the USDC leg through MagicBlock, and shield the payout balance through Umbra.
 
 
 ## Overview
@@ -131,6 +242,48 @@ sequenceDiagram
 | `remove_liquidity` | Remove encrypted liquidity from pool | Authority only |
 | `swap_exact_in` | Execute private swap with FHE constant-product math | Anyone |
 | `swap_exact_out` | Execute private swap specifying exact output | Anyone |
+
+## VelvetMesh Program Instructions
+
+| Instruction | Description | Access |
+|-------------|-------------|--------|
+| `create_intent` | Create an encrypted private RFQ intent with allowed settlement routes and a match verifier | Intent owner |
+| `submit_quote` | Submit an encrypted maker/filler quote commitment for an open intent | Maker/filler |
+| `request_private_match` | Move an Arcium intent into private computation after enough quotes exist | Intent owner |
+| `record_private_match` | Bind a verified computation result to a selected quote commitment and route | Configured match verifier |
+| `accept_quote` | Accept the selected private quote and create an accepted match | Intent owner |
+| `prepare_settlement_handoff` | Record a sponsor settlement payload hash for Umbra, MagicBlock, or direct settlement | Intent owner |
+| `mark_settlement_ready` | Confirm a prepared settlement handoff | Configured settlement verifier |
+| `cancel_intent` | Cancel an open intent before private computation/acceptance | Intent owner |
+
+## Backend Validation
+
+```bash
+npm run test:sponsors:live
+ANCHOR_PROVIDER_URL="https://devnet.helius-rpc.com/?api-key=..." npm run test:velvetmesh:devnet
+```
+
+`test:sponsors:live` calls MagicBlock's public Private Payments API and creates
+a real Umbra devnet SDK client. It also registers or verifies the funded devnet
+wallet as an Umbra confidential user through the real SDK. The Umbra adapter
+checks the real devnet relayer supported-mint list before deposit/withdraw, so
+unsupported mints fail closed instead of pretending to work. The first live
+registration produced finalized devnet signatures:
+
+- `L3zg7B2e9qxcRH44FyH9QazxaE27zFmd96XmpPB7mQkNRZsRFTFzTr7ubq58zX4V9LCKdF18RVCAvRH9S95UKbE`
+- `4rwfBazV6zXaxYyR6DJLT87FEUNJQtr7aFZTZsXrToKSVsNT2mfbVrTsCzzFm3K7Ycnq6hPUnDdCgN8uijyRDQLQ`
+
+The verified Umbra asset path is devnet wSOL. A custom devnet mint failed
+correctly with Umbra's `fee_schedule AccountNotInitialized`, while supported
+wSOL deposit/withdraw finalized through real Arcium callbacks:
+
+- Deposit callback: `4DmkaC7SM71Qq3vurz49Z5UnUYHe8iPHke6Wxkdy2UvPky6RfrrPMjC6ddVora33w1eB11nTwGByRZgxhDRmwWyE`
+- Withdrawal callback: `3W5cDragn7v5Z8s9h4HD4qL9PmXAR39a28tfwKJf94uVqgXhkj88UtFwmKucK3uUDZPTyTmmxGjqAyMXvsMtHRR3`
+
+`test:velvetmesh:devnet` validates the on-chain state machine, including a real
+MagicBlock transaction-build payload committed through
+`prepare_settlement_handoff`, plus rejection of zero sponsor payloads, wrong
+settlement verifiers, and double settlement confirmations.
 
 ---
 
