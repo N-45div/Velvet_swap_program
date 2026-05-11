@@ -1,3 +1,112 @@
+# VelvetMesh Architecture
+
+> Private poolless intent liquidity by VelvetSwap.
+
+VelvetMesh adds a private P2P intent/RFQ layer on top of the existing
+VelvetSwap confidential AMM. The existing `light_swap_psp` program remains the
+confidential AMM fallback and Solana settlement foundation.
+
+## System Thesis
+
+VelvetMesh avoids shared pool exposure as the default user path. A user creates
+an encrypted intent with hidden size, price, slippage, and risk preferences.
+Makers, fillers, or agents submit private offers. The accepted fill settles
+through a selected route:
+
+- direct Solana P2P fill
+- VelvetSwap confidential AMM fallback
+- Umbra shielded payout path
+- MagicBlock real-time private RFQ session handoff
+- Jupiter public fallback route
+
+Arcium is the primary encrypted computation path for intent and offer
+evaluation. Umbra and MagicBlock are the current sponsor-aligned product
+extensions: shielded post-match payouts and real-time private RFQ sessions.
+Cross-chain/Ika routes are parked as future optional adapters.
+
+## Target Layering
+
+```mermaid
+graph TB
+    USER["User"]
+    INTENT["VelvetMesh<br/>Private Intent/RFQ Layer"]
+    ARCIUM["Arcium<br/>Encrypted Intent Computation"]
+    MATCH["Maker/Filler<br/>Private Quote Selection"]
+    VERIFY["Verifier Handoff<br/>record_private_match"]
+    ROUTER["Settlement Router"]
+    P2P["Direct Solana<br/>P2P Fill"]
+    SWAP["VelvetSwap<br/>Confidential AMM Fallback"]
+    UMBRA["Umbra<br/>Shielded Payout"]
+    MAGIC["MagicBlock<br/>Private RFQ Session"]
+    JUP["Jupiter<br/>Public Fallback Quote"]
+
+    USER --> INTENT
+    INTENT --> ARCIUM
+    ARCIUM --> MATCH
+    MATCH --> VERIFY
+    VERIFY --> ROUTER
+    ROUTER --> P2P
+    ROUTER --> SWAP
+    ROUTER --> UMBRA
+    ROUTER --> MAGIC
+    ROUTER --> JUP
+```
+
+## Planned Modules
+
+```txt
+programs/
+  light_swap_psp/          # existing VelvetSwap confidential AMM
+  velvet_mesh/             # private intent/RFQ state machine
+
+packages/
+  velvetmesh-core/         # local intent/RFQ policy and settlement handoff
+  umbra-adapter/           # shielded payout boundary
+  magicblock-adapter/      # real-time RFQ boundary
+  torque-adapter/          # optional liquidity incentive boundary
+  jupiter-adapter/         # optional public fallback quote boundary
+  ika-adapter/             # parked future cross-chain route boundary
+```
+
+## Current Repo Truth
+
+The current on-chain implementation has two layers:
+
+- `programs/light_swap_psp`: VelvetSwap confidential AMM scaffold using Light
+  Protocol compressed state, Inco encrypted values, Inco Token confidential
+  token transfers, and MagicBlock dependencies in the test/demo surface.
+- `programs/velvet_mesh`: private intent/RFQ state machine for encrypted intent
+  creation, encrypted maker quotes, Arcium computation requests,
+  verifier-authorized match recording, accepted matches, and settlement
+  readiness.
+
+The current `compute_swap_updates` path is a demo passthrough, so docs and demo
+copy must distinguish between the existing confidential transfer/settlement
+surface and production-complete encrypted AMM math.
+
+## VelvetMesh State Flow
+
+```mermaid
+stateDiagram-v2
+    [*] --> Open: create_intent
+    Open --> Open: submit_quote
+    Open --> ComputationRequested: request_private_match
+    ComputationRequested --> MatchReady: record_private_match
+    MatchReady --> Accepted: accept_quote
+    Accepted --> SettlementReady: mark_settlement_ready
+    Open --> Cancelled: cancel_intent
+```
+
+`record_private_match` is the trust boundary between Arcium computation and
+VelvetMesh settlement. It requires the intent's configured match verifier to
+sign and checks that the selected quote commitment, route, and computation id
+match the requested private computation before `accept_quote` can succeed.
+For production Arcium flows, the match verifier should be the Arcium matcher's
+signer PDA; the callback verifies `SignedComputationOutputs` and signs the CPI
+into VelvetMesh with that PDA.
+
+---
+
 # VelvetSwap Architecture
 
 > Technical deep-dive into the confidential AMM implementation.
