@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "programs/light_swap_psp"
+    "programs/light_swap_psp",
+    "programs/velvet_mesh"
 ]
 resolver = "2"
 

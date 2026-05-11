@@ -8,10 +8,12 @@ skip-lint = false
 
 [programs.localnet]
 light_swap_psp = "4b8jCufu7b4WKXdxFRQHWSks4QdskW62qF7tApSNXuZD"
+velvet_mesh = "4GPgiWJN1WRifSvEVs8btvyq7Yinn6DNErnuyXDRHFFo"
 
 [programs.devnet]
 inco_lightning = "5sjEbPiqgZrYwR31ahR6Uk9wf5awoX61YGg7jExQSwaj"
 light_swap_psp = "4b8jCufu7b4WKXdxFRQHWSks4QdskW62qF7tApSNXuZD"
+velvet_mesh = "4GPgiWJN1WRifSvEVs8btvyq7Yinn6DNErnuyXDRHFFo"
 
 [registry]
 url = "https://api.apr.dev"
